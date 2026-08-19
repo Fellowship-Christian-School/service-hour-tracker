@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Service Hour Tracker
 
-## Getting Started
+A web app for Fellowship Christian School clubs to record and review student service hours. It uses Google sign-in and only accepts `@fcsweb.org` accounts.
 
-First, run the development server:
+## Core features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Create a club and share its invite link with students.
+- Join a club from an invite link.
+- Log service hours and track their approval status.
+- Approve or reject submitted hours as a club admin.
+- Create and manage service opportunities.
+- Promote members, remove members, and assign member flags.
+- Export club service-hour records.
+- Archive or delete clubs.
+
+Club creators have full control. Admins manage members, opportunities, and submitted hours. Students join clubs, log hours, and view their records.
+
+## Development setup
+
+Requirements:
+
+- [Bun](https://bun.sh/)
+- PostgreSQL
+- A Google OAuth client
+
+Install dependencies:
+
+```sh
+bun install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```dotenv
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DATABASE"
+AUTH_SECRET="REPLACE_WITH_A_RANDOM_SECRET"
+GOOGLE_CLIENT_ID="YOUR_GOOGLE_CLIENT_ID"
+GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Set the Google OAuth redirect URI to:
 
-## Learn More
+```text
+http://localhost:3000/api/auth/callback/google
+```
 
-To learn more about Next.js, take a look at the following resources:
+Create the database schema and generate the Prisma client:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```sh
+bunx prisma migrate dev
+bunx prisma generate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Start the development server:
 
-## Deploy on Vercel
+```sh
+bun run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Production setup
+
+Provide the same environment variables as development, using the production database and public HTTPS URL. Set the Google OAuth redirect URI to:
+
+```text
+https://YOUR_DOMAIN/api/auth/callback/google
+```
+
+Install dependencies, apply migrations, generate the Prisma client, and build:
+
+```sh
+bun install --frozen-lockfile
+bunx prisma migrate deploy
+bunx prisma generate
+bun run build
+```
+
+Start the production server:
+
+```sh
+bun run start
+```
+
+Run database migrations once for each release before starting the new application version. Keep `AUTH_SECRET`, Google credentials, and `DATABASE_URL` outside the repository.
