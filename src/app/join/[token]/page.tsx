@@ -1,5 +1,6 @@
 import { joinClub } from "@/lib/actions";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function JoinClubPage({
   params,
@@ -19,12 +20,12 @@ export default async function JoinClubPage({
           <p className="mt-2 text-sm text-gray-500">
             This invite link is no longer valid. Ask the club creator for a new one.
           </p>
-          <a
+          <Link
             href="/"
             className="mt-4 inline-block rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Go Home
-          </a>
+          </Link>
         </div>
       </div>
     );

@@ -1,4 +1,5 @@
 import { createClub } from "@/lib/actions";
+import Link from "next/link";
 
 export default function CreateClubPage() {
   return (
@@ -37,12 +38,12 @@ export default function CreateClubPage() {
         </div>
 
         <div className="flex gap-3 pt-2">
-          <a
+          <Link
             href="/"
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Cancel
-          </a>
+          </Link>
           <button
             type="submit"
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
