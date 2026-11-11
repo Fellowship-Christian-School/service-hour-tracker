@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { requireClubAdmin } from "@/lib/require-club-admin";
 import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/badge";
 import { FlagPill } from "@/components/flag-pill";
@@ -23,14 +23,9 @@ export default async function StudentRosterPage({
   searchParams: Promise<{ flag?: string }>;
 }) {
   const { id: clubId } = await params;
+  const { membership: currentMembership } = await requireClubAdmin(clubId);
   const { flag: flagFilter } = await searchParams;
-  const session = await auth();
-  if (!session?.user?.id) return null;
-
-  const currentMembership = await prisma.clubMembership.findUnique({
-    where: { clubId_userId: { clubId, userId: session.user.id } },
-  });
-  const isCreator = currentMembership?.role === "CREATOR";
+  const isCreator = currentMembership.role === "CREATOR";
 
   const [members, flags] = await Promise.all([
     prisma.clubMembership.findMany({

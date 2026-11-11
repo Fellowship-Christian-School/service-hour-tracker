@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireClubAdmin } from "@/lib/require-club-admin";
 import { StatusBadge } from "@/components/ui/badge";
 import { FlagPill } from "@/components/flag-pill";
 import { formatDate } from "@/lib/utils";
@@ -11,6 +12,7 @@ export default async function StudentDetailPage({
   params: Promise<{ id: string; uid: string }>;
 }) {
   const { id: clubId, uid } = await params;
+  await requireClubAdmin(clubId);
 
   const [user, membership, hours, approvedSum] = await Promise.all([
     prisma.user.findUnique({ where: { id: uid } }),

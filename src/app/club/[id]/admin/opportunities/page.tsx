@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { requireClubAdmin } from "@/lib/require-club-admin";
 import { prisma } from "@/lib/prisma";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -14,8 +14,8 @@ export default async function ManageOpportunitiesPage({
   params: Promise<{ id: string }>;
 }) {
   const { id: clubId } = await params;
-  const session = await auth();
-  const currentUserId = session?.user?.id;
+  const { user } = await requireClubAdmin(clubId);
+  const currentUserId = user.id;
 
   const opportunities = await prisma.opportunity.findMany({
     where: { clubId },

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireClubAdmin } from "@/lib/require-club-admin";
 import Link from "next/link";
 import { CopyInviteLink } from "@/components/copy-button";
 
@@ -8,6 +9,7 @@ export default async function AdminDashboard({
   params: Promise<{ id: string }>;
 }) {
   const { id: clubId } = await params;
+  await requireClubAdmin(clubId);
 
   const [club, totalApproved, pendingCount, memberCount, monthlyHours] = await Promise.all([
     prisma.club.findUnique({ where: { id: clubId } }),

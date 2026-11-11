@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireClubAdmin } from "@/lib/require-club-admin";
 import { StatusBadge } from "@/components/ui/badge";
 import { FlagPill } from "@/components/flag-pill";
 import { formatDate } from "@/lib/utils";
@@ -21,6 +22,7 @@ export default async function ReviewInboxPage({
   }>;
 }) {
   const { id: clubId } = await params;
+  await requireClubAdmin(clubId);
   const {
     status = "PENDING",
     student,
