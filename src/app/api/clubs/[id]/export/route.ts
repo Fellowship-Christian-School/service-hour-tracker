@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { csvRow } from "@/lib/csv";
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -16,6 +17,7 @@ export async function GET(
   // Verify admin access
   const membership = await prisma.clubMembership.findUnique({
     where: { clubId_userId: { clubId, userId: session.user.id } },
+    select: { role: true },
   });
   if (!membership || (membership.role !== "ADMIN" && membership.role !== "CREATOR")) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -25,29 +27,40 @@ export async function GET(
 
   if (studentId) {
     // Export individual student's hours
-    const student = await prisma.user.findUnique({ where: { id: studentId } });
+    const student = await prisma.user.findUnique({
+      where: { id: studentId },
+      select: { name: true },
+    });
     const hours = await prisma.serviceHour.findMany({
       where: { clubId, studentId },
       orderBy: { date: "desc" },
+      select: {
+        activityName: true,
+        date: true,
+        hours: true,
+        status: true,
+        description: true,
+        rejectReason: true,
+      },
     });
 
     const csv = [
-      "Activity,Date,Hours,Status,Description,Reject Reason",
+      csvRow(["Activity", "Date", "Hours", "Status", "Description", "Reject Reason"]),
       ...hours.map((h) =>
-        [
-          `"${h.activityName}"`,
+        csvRow([
+          h.activityName,
           new Date(h.date).toISOString().split("T")[0],
           Number(h.hours),
           h.status,
-          `"${h.description || ""}"`,
-          `"${h.rejectReason || ""}"`,
-        ].join(",")
+          h.description,
+          h.rejectReason,
+        ])
       ),
     ].join("\n");
 
     return new NextResponse(csv, {
       headers: {
-        "Content-Type": "text/csv",
+        "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${(student?.name || "student").replace(/"/g, "")}_hours.csv"`,
       },
     });
@@ -62,9 +75,11 @@ export async function GET(
           ? { flags: { some: { flagId: flagFilter } } }
           : {}),
       },
-      include: {
-        user: true,
-        flags: { include: { flag: true } },
+      select: {
+        userId: true,
+        role: true,
+        user: { select: { name: true, email: true } },
+        flags: { select: { flag: { select: { name: true } } } },
       },
     });
 
@@ -78,22 +93,22 @@ export async function GET(
     );
 
     const csv = [
-      "Name,Email,Role,Flags,Approved Hours",
+      csvRow(["Name", "Email", "Role", "Flags", "Approved Hours"]),
       ...members.map((m) =>
-        [
-          `"${m.user.name}"`,
+        csvRow([
+          m.user.name,
           m.user.email,
           m.role,
-          `"${m.flags.map((mf) => mf.flag.name).join("; ")}"`,
+          m.flags.map((mf) => mf.flag.name).join("; "),
           hoursMap[m.userId] || 0,
-        ].join(",")
+        ])
       ),
     ].join("\n");
 
     const [club, flag] = await Promise.all([
-      prisma.club.findUnique({ where: { id: clubId } }),
+      prisma.club.findUnique({ where: { id: clubId }, select: { name: true } }),
       flagFilter
-        ? prisma.flag.findUnique({ where: { id: flagFilter } })
+        ? prisma.flag.findUnique({ where: { id: flagFilter }, select: { name: true } })
         : Promise.resolve(null),
     ]);
 
@@ -102,7 +117,7 @@ export async function GET(
 
     return new NextResponse(csv, {
       headers: {
-        "Content-Type": "text/csv",
+        "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${baseName}${suffix}_roster.csv"`,
       },
     });
